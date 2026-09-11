@@ -8,6 +8,17 @@ FloodShield is a district-level flood-risk decision-support prototype for Pakist
 
 ---
 
+## Live Demo
+
+- **Web App:** https://floo-shield-l9ql359lp-capstone-fdc2.vercel.app/
+- **Backend API:** https://floodshield-api.onrender.com/
+- **API Docs:** https://floodshield-api.onrender.com/docs
+- **GitHub Repository:** https://github.com/isham-s/FloodShield
+
+> The Render backend may take a short time to wake up after inactivity. If Scenario Lab does not respond immediately, open the API docs once, wait for the service to wake, then retry.
+
+---
+
 ## Project Goal
 
 FloodShield is built around one practical question:
@@ -302,6 +313,7 @@ Infrastructure and population are primarily used for **exposure and relief-prior
 - Recharts
 - Lucide React
 - responsive custom dashboard styling
+- deployed on **Vercel**
 
 ### Backend
 - FastAPI
@@ -309,10 +321,15 @@ Infrastructure and population are primarily used for **exposure and relief-prior
 - scikit-learn pipeline
 - pandas / NumPy
 - joblib model bundle
+- deployed on **Render**
 
-### Planned Deployment
-- **Frontend:** Vercel
-- **Backend:** Render
+### Deployment
+
+**Frontend:** https://floo-shield-l9ql359lp-capstone-fdc2.vercel.app/
+
+**Backend:** https://floodshield-api.onrender.com/
+
+**API Docs:** https://floodshield-api.onrender.com/docs
 
 ---
 
@@ -422,11 +439,9 @@ npm run dev
 
 ---
 
-## Deploy Backend on Render
+## Production Deployment Configuration
 
-Create a new Render Web Service from this repository.
-
-Use:
+### Render Backend
 
 ```text
 Root Directory: backend
@@ -434,34 +449,14 @@ Build Command: pip install -r requirements.txt
 Start Command: uvicorn app:app --host 0.0.0.0 --port $PORT
 ```
 
-After deployment, save the Render backend URL.
-
-Example:
-
-```text
-https://your-floodshield-api.onrender.com
-```
-
----
-
-## Deploy Frontend on Vercel
-
-Import the same GitHub repository into Vercel.
-
-Use:
+### Vercel Frontend
 
 ```text
 Root Directory: frontend
 Framework: Vite
+Environment Variable:
+VITE_API_URL=https://floodshield-api.onrender.com
 ```
-
-Add this environment variable:
-
-```text
-VITE_API_URL=https://your-floodshield-api.onrender.com
-```
-
-Then deploy.
 
 ---
 
@@ -479,7 +474,7 @@ GET /
 POST /predict
 ```
 
-The prediction endpoint expects the hazard-model input features and returns:
+The prediction endpoint expects the hazard-model input features and returns output in the form:
 
 ```json
 {
@@ -527,6 +522,7 @@ These are prototype display thresholds and should not be interpreted as official
 - HydroRIVERS discharge values are long-term estimates rather than live gauge readings.
 - The current national dashboard is primarily a **retrospective / research view**, not live operational forecasting.
 - True real-time flood warning would require current rainfall, river-gauge/forecast inputs, validation and operational alert protocols.
+- The free Render service can sleep after inactivity, so the first Scenario Lab request may be delayed while the backend wakes up.
 
 ---
 
@@ -557,12 +553,6 @@ It should be used for analysis, demonstration and research — **not as a substi
 
 ---
 
-## Repository
-
-GitHub: https://github.com/isham-s/FloodShield
-
----
-
 ## Status
 
-**Active development** — model pipeline prepared, 29-district geospatial dataset consolidated, frontend/backend deployment in progress.
+**Deployed capstone prototype** — model pipeline prepared, 29-district geospatial dataset consolidated, XGBoost hazard model deployed through FastAPI on Render, and the interactive frontend deployed on Vercel.
