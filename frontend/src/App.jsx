@@ -21,19 +21,16 @@ export default function App(){
   const [tab,setTab]=useState("overview");
   const [latest,setLatest]=useState([]);
   const [geo,setGeo]=useState(null);
-  const [history,setHistory]=useState([]);
   const [selected,setSelected]=useState("Swat");
   const [query,setQuery]=useState("");
 
   useEffect(()=>{Promise.all([
     fetch("/data/latest.json").then(r=>r.json()),
-    fetch("/data/districts.geojson").then(r=>r.json()),
-    fetch("/data/history.json").then(r=>r.json())
-  ]).then(([l,g,h])=>{setLatest(l);setGeo(g);setHistory(h); if(l.length&&!l.find(x=>x.district==="Swat"))setSelected(l[0].district)})},[]);
+    fetch("/data/districts.geojson").then(r=>r.json())
+  ]).then(([l,g])=>{setLatest(l);setGeo(g); if(l.length&&!l.find(x=>x.district==="Swat"))setSelected(l[0].district)})},[]);
 
   const current=useMemo(()=>latest.find(d=>d.district===selected)||latest[0],[latest,selected]);
   const sorted=useMemo(()=>[...latest].sort((a,b)=>(b.relief_priority_score||0)-(a.relief_priority_score||0)),[latest]);
-  const selectedHistory=useMemo(()=>history.filter(h=>h.district===selected).sort((a,b)=>b.year-a.year),[history,selected]);
   const filtered=useMemo(()=>latest.filter(d=>d.district.toLowerCase().includes(query.toLowerCase())).slice(0,8),[latest,query]);
 
   const mapStyle=feature=>{
@@ -73,7 +70,7 @@ export default function App(){
       </header>
 
       {tab==="overview" && <Overview latest={latest} geo={geo} selected={selected} setSelected={setSelected} mapStyle={mapStyle} onEach={onEach} current={current} setTab={setTab}/>}
-      {tab==="district" && <District current={current} history={selectedHistory} setSelected={setSelected} latest={latest}/>}
+      {tab==="district" && <District current={current} setSelected={setSelected} latest={latest}/>}
       {tab==="relief" && <Relief sorted={sorted} setSelected={(d)=>{setSelected(d);setTab("district")}}/>}
       {tab==="method" && <Method/>}
     </main>
@@ -121,7 +118,7 @@ function Overview({latest,geo,selected,setSelected,mapStyle,onEach,current,setTa
   </div>
 }
 
-function District({current,history,latest,setSelected}){
+function District({current,latest,setSelected}){
   const [scenario,setScenario]=useState({
     annual_rainfall_mm:current.annual_rainfall_mm||0, monsoon_rainfall_mm:current.monsoon_rainfall_mm||0,
     max_daily_rainfall_mm:current.max_daily_rainfall_mm||0, rainy_days:current.rainy_days||0,
@@ -190,18 +187,12 @@ function District({current,history,latest,setSelected}){
       <div className="note warn"><CircleHelp size={16}/>OpenStreetMap-derived counts reflect mapped/tagged features; zero may mean incomplete mapping, not true absence.</div>
     </Card>
 
-    <div className="twoCol">
-      <Card>
-        <div className="cardHead"><div><span className="eyebrow">HISTORICAL EVIDENCE</span><h3>Recorded flood years</h3></div><Database/></div>
-        <div className="timeline">{history.length?history.map((h,i)=><div className="event" key={`${h.year}-${i}`}><div className="year">{h.year}</div><div><b>{h.event_name||h.flood_type||"Recorded flood event"}</b><span>{h.flood_severity||"Severity not recorded"}{h.damage_people_affected?` · ${fmt(h.damage_people_affected,0)} people affected`:""}</span></div></div>):<p className="muted">No confirmed event rows available in the compiled table.</p>}</div>
-      </Card>
-      <Card>
-        <div className="cardHead"><div><span className="eyebrow">SCENARIO LAB</span><h3>Change rainfall, test hazard</h3></div><CloudRain/></div>
-        {Object.entries(scenario).map(([k,v])=><label className="slider" key={k}><span>{k.replaceAll("_"," ")}</span><b>{fmt(v,0)}</b><input type="range" min="0" max={k.includes("days")?120:1600} value={v} onChange={e=>setScenario({...scenario,[k]:Number(e.target.value)})}/></label>)}
-        <button className="primary" onClick={runScenario}>Run model scenario</button>
-        {prediction&&<div className="scenarioResult">{prediction.offline?<><b>Backend not connected yet.</b><span>Deploy the included FastAPI service and set VITE_API_URL in Vercel.</span></>:<><Pill risk={prediction.risk_level}/><b>{pct(prediction.flood_probability)}</b><span>{prediction.alert?"Risk-alert threshold crossed":"Below prototype alert threshold"}</span></>}</div>}
-      </Card>
-    </div>
+    <Card>
+      <div className="cardHead"><div><span className="eyebrow">SCENARIO LAB</span><h3>Change rainfall, test hazard</h3></div><CloudRain/></div>
+      {Object.entries(scenario).map(([k,v])=><label className="slider" key={k}><span>{k.replaceAll("_"," ")}</span><b>{fmt(v,0)}</b><input type="range" min="0" max={k.includes("days")?120:1600} value={v} onChange={e=>setScenario({...scenario,[k]:Number(e.target.value)})}/></label>)}
+      <button className="primary" onClick={runScenario}>Run model scenario</button>
+      {prediction&&<div className="scenarioResult">{prediction.offline?<><b>Backend not connected yet.</b><span>Deploy the included FastAPI service and set VITE_API_URL in Vercel.</span></>:<><Pill risk={prediction.risk_level}/><b>{pct(prediction.flood_probability)}</b><span>{prediction.alert?"Risk-alert threshold crossed":"Below prototype alert threshold"}</span></>}</div>}
+    </Card>
   </div>
 }
 
